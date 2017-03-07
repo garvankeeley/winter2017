@@ -17,6 +17,8 @@ class ExampleList: UITableViewController, NSFetchedResultsControllerDelegate, We
     // Passed in by the app delegate during app initialization
     var model: WebServiceModel!
 
+    var placeholderImage = UIImage()
+
     // MARK: - WebServiceModelDelegate
 
     func webServiceModelDidChangeContent(model: WebServiceModel) {
@@ -27,6 +29,8 @@ class ExampleList: UITableViewController, NSFetchedResultsControllerDelegate, We
     
     override func viewDidLoad() {
         super.viewDidLoad()
+
+        placeholderImage = getImageWithColor(color: .white, size: CGSize(width: 100, height: 100))
 
         // Now we will get notified when data is ready to show. See webServiceModelDidChangeContent above.
         model.delegate = self
@@ -51,10 +55,35 @@ class ExampleList: UITableViewController, NSFetchedResultsControllerDelegate, We
         return cell
     }
 
+
+
     // Code you will customize to setup the cell
     func configure(cell: UITableViewCell, atIndexPath indexPath: IndexPath) {
         let program = model.programs[indexPath.row]
-        cell.textLabel!.text = program.name
+        cell.textLabel!.text = program.title
+        cell.detailTextLabel!.text = program.description
+
+        // Need to set a placeholder image or the cell won't leave space for the image on the left side
+        cell.imageView?.image = placeholderImage
+
+        guard let url = URL(string: program.artworkUrl) else {
+            return
+        }
+
+        let session = URLSession(configuration: URLSessionConfiguration.default, delegate: nil, delegateQueue: OperationQueue.main)
+        let request = NSURLRequest(url: url)
+        let task: URLSessionDataTask = session.dataTask(with: request as URLRequest, completionHandler: {
+            (data, response, error) in
+
+            if let data = data {
+                let image = UIImage(data: data)
+                cell.imageView!.image = image
+                // Without this, the cell doesn't update immediately
+                cell.setNeedsLayout()
+            }
+        })
+        
+        task.resume()
     }
 
     // MARK: - Navigation
@@ -73,8 +102,19 @@ class ExampleList: UITableViewController, NSFetchedResultsControllerDelegate, We
                 vc.detailItem = program
                 
                 // Configure the view if you wish
-                vc.title = program.name
+                vc.title = program.title
             }
         }
+    }
+
+    // MARK: - Utility
+    func getImageWithColor(color: UIColor, size: CGSize) -> UIImage {
+        let rect = CGRect(origin: .zero, size: size)
+        UIGraphicsBeginImageContextWithOptions(rect.size, false, 0.0)
+        color.setFill()
+        UIRectFill(rect)
+        let image = UIGraphicsGetImageFromCurrentImageContext()
+        UIGraphicsEndImageContext()
+        return image!
     }
 }

@@ -9,9 +9,9 @@
 import CoreData
 
 struct Program {
-    var code = ""
-    var id = -1
-    var name = ""
+    var title = ""
+    var description = ""
+    var artworkUrl = ""
 }
 
 protocol WebServiceModelDelegate : class {
@@ -32,23 +32,19 @@ class WebServiceModel {
     // Method to fetch the collection
     func programsGet() {
         let request = WebServiceRequest()
-        request.sendRequest(toUrlPath: "/programs", dataKeyName: nil, completion: {
+        request.urlBase = "https://itunes.apple.com"
+        let queryPath = "/search?term=big+bang+theory&entity=tvEpisode&limit=10&sort=recent"
+        request.sendRequest(toUrlPath: queryPath, dataKeyName: "results", completion: {
             (result: [AnyObject]) in
             for item in result {
-                guard let programDict = item as? [String:AnyObject] else {
+                guard let itemDict = item as? [String:AnyObject] else {
                     continue
                 }
 
                 var program = Program()
-                if let name = programDict["Name"] as? String {
-                    program.name = name
-                }
-                if let code = programDict["Code"] as? String {
-                    program.code = code
-                }
-                if let id = programDict["Id"] as? Int {
-                    program.id = id
-                }
+                program.title = itemDict["trackName"] as? String ?? ""
+                program.description = itemDict["shortDescription"] as? String ?? ""
+                program.artworkUrl = itemDict["artworkUrl100"] as? String ?? ""
                 self.programs.append(program)
             }
 

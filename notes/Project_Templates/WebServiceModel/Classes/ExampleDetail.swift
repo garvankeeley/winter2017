@@ -17,7 +17,7 @@ class ExampleDetail: UIViewController {
         super.viewDidLoad()
 
         // Simply display some data in the debug console
-        print("Detail item: \(detailItem.code), \(detailItem.id)")
+       // print("Detail item: \(detailItem.code), \(detailItem.id)")
 
     }
 
